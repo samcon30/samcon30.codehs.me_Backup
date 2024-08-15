@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="eng" dir="ltr">
+    <head>
+        <meta charset="utf-8">
+        <title> SpaceShooter </title>
+        <link href="index.css" type="text/css" rel="stylesheet">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+        <script type="text/javascript" src="https://static.codehs.com/gulp/80550f5fc4071985bfef352d04f005ca3de931d3/chs-js-lib/chs.js"></script>
+    </head>
+    <body>
+    <div class="body">
+    <header>
+        <h1> Game Design and Development Class </h1>
+        <nav>
+            <ul id="buttons">
+                <li>   <a href="index.html">Home</a></li>
+            </ul>
+        </nav>
+    </header>
+        <img
+        id = "myImage3"
+        src = "https://images.cooltext.com/5667329.png"
+        alt = "Button opening the Youtube Channel Samcon30 in a new tab"     />
+    <canvas
+        width="400"
+        height="480"
+        class="codehs-editor-canvas">
+    </canvas>
+    <pre id="console"></pre>
+        <!this is the code for my button at the bottom it also adds an id for formating with CSS
+        otherwise apon click it acts like a hyperlink and takes you to my youtbe channel>
+        <button   id = "button"   onclick="window.location.href='https://www.youtube.com/@Samcon30';"></button>
+            <script>
+             window.onload = function() {
+                //Text
+            var TITLE = new Text('SpaceShooter');
+            var PS = new Text('PS: The white dots are stars.', '15pt Arial');
+            var POWER_UP_TEXT = new Text('Shoot power-ups to collect them.');
+            var CONTROLS = new Text('A-D or Arrowkeys to move. Space to shoot.', '15pt Arial');
+            var PRESS = new Text('Press any button to start the game', '18pt Arial');
+            
+            //Player
+            var PLAYER;
+            var SCORE = 0;
+            var SCORE_TXT = new Text("SCORE: " + SCORE);
+            var spacebarReleased = true;
+            var HEALTH = 100;
+            var HP = new Text("Health: " + HEALTH + "/100");
+            var keysPressed = {
+                left: false,
+                right: false
+            };
+            
+            //Enemy
+            var WAVE_TIMER = 0;
+            var WAVE_NUMBER = 10;
+            var BOSS_ALIVE = false;
+            var BOSS_HP = 10000;
+            var BOSS_X = 10;
+            var BOSS_HEALTH;
+            var ENEMIES = [];
+            var ENEMY_SIZE = 38;
+            var NUM_ENEMIES = 100;
+            
+            //Canvas
+            var X = getWidth();
+            var Y = getHeight();
+            var CENTER_X = X/2;
+            var CENTER_Y = Y/2;
+            var ONE_FOURTH_Y = Y/4;
+            
+            //Power-Ups
+            var POWER_UP_HEALTH_HP = 5;
+            var POWER_UP_DOUBLE_SHOT_HP = 5;
+            var POWER_UP_SHOTGUN_HP = 5;
+            var HEALTH_POWER_UP;
+            var POWER_UP_DOUBLE_SHOT;
+            var POWER_UP_SHOTGUN;
+            var DOUBLE_SHOT = false;
+            var SHOTGUN = false;
+            
+            //Functional Weirdness
+            var SPEED_MULTIPLIER = 2.5;
+            var BACKGROUND = new Rectangle(X,Y);
+            var gameStarted = false;
+            var INTERVALS = [];
+            var INTERVALS2 = [];
+            var STARS = [];
+            var windex;
+            window.biasedRandomizer = (function() {
+              const probabilities = [0.4, 0.3, 0.2, 0.08, 0.02];
+            
+              return function() {
+                const randomValue = Math.random();
+                let cumulativeProbability = 0;
+            
+                for (let i = 0; i < probabilities.length; i++) {
+                  cumulativeProbability += probabilities[i];
+                  if (randomValue < cumulativeProbability) {
+                    return i + 1;
+                  }
+                }
+            
+                // Fallback (should rarely reach here)
+                return probabilities.length;
+              };
+            })();
+            
+            function start() {
+                BACKGROUND.setColor(Color.black);
+                TITLE.setPosition(CENTER_X-TITLE.getWidth()/2, 0+TITLE.getHeight()+TITLE.getHeight()/4);
+                PS.setPosition(CENTER_X-PS.getWidth()/2, TITLE.getY()+PS.getHeight()*3);
+                POWER_UP_TEXT.setPosition(CENTER_X-POWER_UP_TEXT.getWidth()/2, PS.getY()+POWER_UP_TEXT.getHeight()*3);
+                CONTROLS.setPosition(CENTER_X-CONTROLS.getWidth()/2, POWER_UP_TEXT.getY() + CONTROLS.getHeight()*3);
+                PRESS.setPosition(CENTER_X-PRESS.getWidth()/2, Y-PRESS.getHeight()*3);
+                TITLE.setColor(Color.blue);
+                PS.setColor(Color.white);
+                POWER_UP_TEXT.setColor(Color.white);
+                CONTROLS.setColor(Color.white);
+                PRESS.setColor(Color.white);
+                PLAYER = new WebImage("https://codehs.com/uploads/6f5738dd183afb96df12af7e00ae575a");
+                HEALTH_POWER_UP = new WebImage("https://codehs.com/uploads/59a4b6bb77f994b664602b250211aa8d");
+                POWER_UP_DOUBLE_SHOT = new WebImage("https://codehs.com/uploads/2798d59328f28cee8bab0d5b29c9baa1");
+                POWER_UP_SHOTGUN = new WebImage("https://codehs.com/uploads/90a542310112ae7122bd68a21ec45eaf");
+                BOSS_HEALTH = new Text(BOSS_HP + "/10000");
+                PLAYER.setSize(54, 54);
+                HEALTH_POWER_UP.setSize(50,50);
+                POWER_UP_DOUBLE_SHOT.setSize(50, 50);
+                POWER_UP_SHOTGUN.setSize(50, 50);
+                PLAYER.setPosition(CENTER_X-PLAYER.getWidth()/2, Y-PLAYER.getHeight()*2);
+                BOSS_HEALTH.setPosition(CENTER_X, 0+BOSS_HEALTH.getHeight()*2);
+                SCORE_TXT.setPosition(0, 0+SCORE_TXT.getHeight());
+                HEALTH_POWER_UP.setPosition(0+HEALTH_POWER_UP.getWidth()/2, CENTER_Y);
+                POWER_UP_DOUBLE_SHOT.setPosition(CENTER_X-(POWER_UP_DOUBLE_SHOT.getWidth()/2), CENTER_Y);
+                POWER_UP_SHOTGUN.setPosition(X-POWER_UP_SHOTGUN.getWidth()*1.5, CENTER_Y);
+                HP.setColor(Color.white);
+                SCORE_TXT.setColor(Color.white);
+                BOSS_HEALTH.setColor(Color.white);
+                HEALTH_POWER_UP.type = "HP-UP";
+                POWER_UP_DOUBLE_SHOT.type = "DOUBLE-SHOT";
+                POWER_UP_SHOTGUN.type = "SHOTGUN";
+                HP.setPosition(0, Y-HP.getHeight());
+                PLAYER.type = "player";
+                PLAYER.layer = 2;
+                HP.layer = 1;
+                SCORE_TXT.layer=1;
+                BOSS_HEALTH.layer = 1;
+                add(BACKGROUND);
+                add(TITLE);
+                add(PS);
+                add(POWER_UP_TEXT);
+                add(CONTROLS);
+                add(PRESS);
+                generateEnemies();
+                staryNight();
+                keyDownMethod(gameStart);
+            }
+            
+            function gameStart() {
+                if (gameStarted == false) {
+                    remove(TITLE);
+                    remove(PS);
+                    remove(POWER_UP_TEXT);
+                    remove(CONTROLS);
+                    remove(PRESS);
+                    add(PLAYER);
+                    add(HP);
+                    add(SCORE_TXT);
+                    gameStarted = true;
+                    INTERVALS2.push(setInterval(enemyWave, 15000));
+                    INTERVALS2.push(setInterval(powerUp, 15000*SPEED_MULTIPLIER));
+                    summonStars();
+                    windex = requestAnimationFrame(gameLoop);
+                }
+            }
+            
+            function staryNight() {
+                for (var s=0; s<=100; s++) {
+                   var star = new Oval(4,8);
+                   star.setColor(Color.white);
+                   star.layer=1;
+                   STARS.push(star);
+                }
+            }
+            
+            function summonStars() {
+                for (var i=0; i < STARS.length; i++) {
+                    add(STARS[i]);
+                    INTERVALS2.push(setInterval(speed, 15, i));
+                }
+            }
+            
+            function speed(s) {
+                STARS[s].move(0, 5);
+                if (STARS[s].getY() >= Y) {
+                    var starX = Randomizer.nextInt(0+4, X);
+                    var starY = Randomizer.nextInt(0-8, -Y);
+                    STARS[s].setPosition(starX, starY);
+                }
+            }
+            
+            function firePlayerBullet() {
+                if (HEALTH > 0) {
+                    var PLAYER_BULLET = new Oval(10, 20);
+                    PLAYER_BULLET.setColor(Color.blue);
+                    PLAYER_BULLET.setPosition(PLAYER.getX()+PLAYER.getWidth()/2, PLAYER.getY());
+                    PLAYER_BULLET.type="bullet";
+                    add(PLAYER_BULLET);
+                    INTERVALS2.push(setInterval(flyBullet, 5*SPEED_MULTIPLIER, PLAYER_BULLET));
+                }
+            }
+            
+            function firePlayerBullet2(){ 
+                if (HEALTH>0) { 
+                    var PLAYER_BULLET = new Oval (10,20);
+                    var PLAYER_BULLET2 = new Oval (10,20);
+                    PLAYER_BULLET.setColor(Color.blue);
+                    PLAYER_BULLET2.setColor(Color.blue);
+                    PLAYER_BULLET.setPosition(PLAYER.getX()+PLAYER.getWidth()/2-10,PLAYER.getY());
+                    PLAYER_BULLET2.setPosition(PLAYER.getX()+PLAYER.getWidth()/2+10,PLAYER.getY());
+                    PLAYER_BULLET.type="bullet"; 
+                    PLAYER_BULLET2.type="bullet";
+                    add(PLAYER_BULLET); 
+                    add(PLAYER_BULLET2);
+                    INTERVALS2.push(setInterval(flyBullet, 5*SPEED_MULTIPLIER, PLAYER_BULLET)); 
+                    INTERVALS2.push(setInterval(flyBullet, 5*SPEED_MULTIPLIER, PLAYER_BULLET2));
+                } 
+            }
+            
+            function firePlayerBullet3(){
+                if (HEALTH>0) {
+                    var PLAYER_BULLET = new Oval(10,20);
+                    var PLAYER_BULLET2 = new Oval(10,20);
+                    var PLAYER_BULLET3 = new Oval(10,20);
+                    var PLAYER_BULLET4 = new Oval(10,20);
+                    var PLAYER_BULLET5 = new Oval(10,20);
+                    PLAYER_BULLET.setColor(Color.blue);
+                    PLAYER_BULLET2.setColor(Color.blue);
+                    PLAYER_BULLET3.setColor(Color.blue);
+                    PLAYER_BULLET4.setColor(Color.blue);
+                    PLAYER_BULLET5.setColor(Color.blue);
+                    PLAYER_BULLET.setPosition(PLAYER.getX() + PLAYER.getWidth()/2-10, PLAYER.getY()-20);
+                    PLAYER_BULLET2.setPosition(PLAYER.getX()+PLAYER.getWidth()/2+10, PLAYER.getY()-20);
+                    PLAYER_BULLET3.setPosition(PLAYER.getX()+PLAYER.getWidth()/2-20, PLAYER.getY());
+                    PLAYER_BULLET4.setPosition(PLAYER.getX()+PLAYER.getWidth()/2+20, PLAYER.getY());
+                    PLAYER_BULLET5.setPosition(PLAYER.getX()+PLAYER.getWidth()/2, PLAYER.getY()-40);
+                    PLAYER_BULLET.type="bullet";
+                    PLAYER_BULLET2.type="bullet";
+                    PLAYER_BULLET3.type="bullet";
+                    PLAYER_BULLET4.type="bullet";
+                    PLAYER_BULLET5.type="bullet";
+                    add(PLAYER_BULLET);
+                    add(PLAYER_BULLET2);
+                    add(PLAYER_BULLET3);
+                    add(PLAYER_BULLET4);
+                    add(PLAYER_BULLET5);
+                    INTERVALS2.push(setInterval(flyBullet, 5*SPEED_MULTIPLIER, PLAYER_BULLET));
+                    INTERVALS2.push(setInterval(flyBullet, 5*SPEED_MULTIPLIER, PLAYER_BULLET2));
+                    INTERVALS2.push(setInterval(flyBullet, 5*SPEED_MULTIPLIER, PLAYER_BULLET3));
+                    INTERVALS2.push(setInterval(flyBullet, 5*SPEED_MULTIPLIER, PLAYER_BULLET4));
+                    INTERVALS2.push(setInterval(flyBullet, 5*SPEED_MULTIPLIER, PLAYER_BULLET5));
+                }
+            }
+            
+            function fireEnemyBullet(enemy) {
+                if (enemy.isActive == true) {
+                    if (enemy.getY() >= 0) {
+                        var ENEMY_BULLET = new Oval(10, 20);
+                        ENEMY_BULLET.setColor(Color.red);
+                        ENEMY_BULLET.setPosition(enemy.getX()+enemy.getWidth()/2, enemy.getY()+enemy.getHeight()+10);
+                        ENEMY_BULLET.type="bullet";
+                        add(ENEMY_BULLET);
+                        INTERVALS2.push(setInterval(flyEnemyBullet, 5*SPEED_MULTIPLIER, ENEMY_BULLET));
+                    }
+                }
+            }
+            
+            function flyBullet(bullet) {
+                bullet.move(0, -6);
+                if (bullet.getY() + bullet.getHeight()<= 0) {
+                    remove(bullet);
+                    clearInterval(flyBullet);
+                    return;
+                }
+                var elementAtBulletPos = getElementAt(bullet.getX(), bullet.getY()-bullet.getHeight());
+                if (elementAtBulletPos !== null) {
+                    if (elementAtBulletPos.type == "enemy") {
+                        if (elementAtBulletPos.health !== null) {
+                            if (elementAtBulletPos.health <=0) {
+                                remove(bullet);
+                                remove(elementAtBulletPos);
+                                elementAtBulletPos.isActive = false;
+                                elementAtBulletPos.health = 10;
+                                if (elementAtBulletPos.score !== null) {
+                                    SCORE+=elementAtBulletPos.score;
+                                    var random = Randomizer.nextInt(1, 20);
+                                    if (random == 20) {
+                                        HEALTH += 4;
+                                    }
+                                    clearInterval(enemyMovement);
+                                    clearInterval(flyBullet);
+                                }
+                                return;
+                            }else {
+                                elementAtBulletPos.health-=1;
+                                remove(bullet);
+                                clearInterval(flyBullet);
+                            }
+                        }
+                    }
+                if (elementAtBulletPos.type == "boss") {
+                        remove(bullet);
+                        BOSS_HP -= 1;
+                        clearInterval(flyBullet);
+                }else if (elementAtBulletPos.type == "HP-UP") {
+                           remove(bullet);
+                           POWER_UP_HEALTH_HP -= 1;
+                           clearInterval(flyBullet);
+                }else if (elementAtBulletPos.type == "DOUBLE-SHOT") {
+                            remove(bullet);
+                            POWER_UP_DOUBLE_SHOT_HP -= 1;
+                            clearInterval(flyBullet);
+                }else if (elementAtBulletPos.type == "SHOTGUN") {
+                            remove(bullet);
+                            POWER_UP_SHOTGUN_HP -= 1;
+                            clearInterval(flyBullet);
+                }
+                if (elementAtBulletPos !== null) {
+                        if(elementAtBulletPos.type == "boss" && BOSS_HP == 0) {
+                            elementAtBulletPos.isActive = false;
+                            remove(elementAtBulletPos);
+                            clearInterval(flyBullet);
+                        }
+                    }
+                if (elementAtBulletPos.type == "bullet") {
+                    remove(elementAtBulletPos);
+                    remove(bullet);
+                    clearInterval(flyBullet);
+                }
+                
+                
+                }
+            }
+            
+            
+            // Event listener for keydown
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'ArrowLeft' || event.key === 'a') {
+                    keysPressed.left = true;
+                } else if (event.key === 'ArrowRight' || event.key === 'd') {
+                    keysPressed.right = true;
+                } else if (event.key === ' ' && spacebarReleased == true) { // Spacebar
+                    if (DOUBLE_SHOT == false && SHOTGUN == false) {
+                        firePlayerBullet(); // Call the function to fire a bullet
+                        spacebarReleased = false;
+                    }else if (DOUBLE_SHOT == true) {
+                        firePlayerBullet2();
+                        spacebarReleased = false;
+                    }else if (SHOTGUN == true) {
+                        firePlayerBullet3();
+                        spacebarReleased = false;
+                    }
+                }
+            });
+            
+            // Event listener for keyup
+            document.addEventListener('keyup', function(event) {
+                if (event.key === 'ArrowLeft' || event.key === 'a') {
+                    keysPressed.left = false;
+                } else if (event.key === 'ArrowRight' || event.key === 'd') {
+                    keysPressed.right = false;
+                } else if (event.key === ' ') { // Spacebar
+                   spacebarReleased = true;
+                }
+            });
+            
+            // Game update loop
+            function gameLoop() {
+                if (keysPressed.left) {
+                    // Move player left by 10 pixels
+                    if (PLAYER.getX()+PLAYER.getWidth() <= 0) {
+                        PLAYER.setPosition(X-PLAYER.getWidth()/2, PLAYER.getY());
+                    }else {
+                    PLAYER.move(-4, 0);
+                    }
+                }
+                if (keysPressed.right) {
+                    // Move player right by 10 pixels
+                    if (PLAYER.getX()>= getWidth()) {
+                        PLAYER.setPosition(0-PLAYER.getWidth(), PLAYER.getY());
+                    }else {
+                        PLAYER.move(4, 0);
+                    }
+                }
+                if (HEALTH <= 0) {
+                    remove(PLAYER)   
+                }
+                HP.setText("Health: " + HEALTH + "/100");
+                HP.setPosition(0, Y-HP.getHeight());
+                HP.type="health";
+                BOSS_HEALTH.setText(BOSS_HP + "/10000");
+                BOSS_HEALTH.setPosition(CENTER_X-BOSS_HEALTH.getWidth()/2, 0+BOSS_HEALTH.getHeight()*2);
+                SCORE_TXT.setText("SCORE: " + SCORE);
+                if (HEALTH > 100) {
+                    HP.setText("Health: " + HEALTH + "/" + HEALTH);
+                }
+                if (HEALTH <= 0) {
+                    lose();   
+                    return;
+                }
+                if (BOSS_HP <= 0) {
+                    BOSS_ALIVE = false;
+                    SCORE+=10000;
+                    WAVE_TIMER = 0;
+                    remove(BOSS_HEALTH);
+                    clearInterval(bossBullet);
+                    BOSS_HP = 1000;
+                }
+                
+                windex = requestAnimationFrame(gameLoop);
+            }
+            
+            function enemyWave() {
+                if (BOSS_ALIVE == false) {
+                    WAVE_TIMER += 1;
+                    console.log(WAVE_TIMER);
+                    var numEnemies = Randomizer.nextInt(15, 70);
+                    if (WAVE_TIMER >= WAVE_NUMBER) {
+                        powerUp;
+                        spawnBoss();
+                        add(BOSS_HEALTH);
+                    } else {
+                        clearIntervals();
+                        summonEnemies();
+                    }
+                }
+            }
+            
+            function generateEnemies() {
+                for (var i = 0; i<=NUM_ENEMIES; i++) {
+                    var enemyType = biasedRandomizer();
+                    if (enemyType == 1) {
+                        var enemy1 = new WebImage("https://codehs.com/uploads/d51a20dbfdff34783f10dae47e78bc46");
+                        enemy1.setSize(ENEMY_SIZE, ENEMY_SIZE);
+                        enemy1.isActive = true;
+                        enemy1.type ="enemy";
+                        enemy1.health = 4;
+                        enemy1.score = 100;
+                        enemy1.layer = 2;
+                        ENEMIES.push(enemy1);
+                    }else if (enemyType == 2) {
+                        var enemy2 = new WebImage("https://codehs.com/uploads/20e368954a112f9872cb4e4fca0d6cc4");
+                        enemy2.setSize(ENEMY_SIZE, ENEMY_SIZE);
+                        enemy2.isActive = true;
+                        enemy2.type="enemy";
+                        enemy2.health = 8;
+                        enemy2.score = 200;
+                        enemy2.layer = 2;
+                        ENEMIES.push(enemy2);
+                    }else if (enemyType == 3) {
+                        var enemy3 = new WebImage("https://codehs.com/uploads/0395945f40c0d0303a63ea8fc0e41225");
+                        enemy3.setSize(ENEMY_SIZE, ENEMY_SIZE);
+                        enemy3.isActive = true;
+                        enemy3.type="enemy";
+                        enemy3.health = 10;
+                        enemy3.score = 300;
+                        enemy3.layer=2;
+                        ENEMIES.push(enemy3);
+                    }else if (enemyType == 4) {
+                        var enemy4 = new WebImage("https://codehs.com/uploads/b38978dbf087576703fe45a6b55c40e0");
+                        enemy4.setSize(ENEMY_SIZE, ENEMY_SIZE);
+                        enemy4.isActive = true;
+                        enemy4.type="enemy";
+                        enemy4.health = 20;
+                        enemy4.score = 400;
+                        enemy4.layer=2;
+                        ENEMIES.push(enemy4);
+                    }else if (enemyType == 5) {
+                        var enemy5 = new WebImage("https://codehs.com/uploads/4dc49ea4ed6cc894b9d79222845dd2fd");
+                        enemy5.setSize(48, 48);
+                        enemy5.isActive = true;
+                        enemy5.type="enemy";
+                        enemy5.health = 40;
+                        enemy5.score = 500;
+                        enemy5.layer=2;
+                        ENEMIES.push(enemy5);
+                    }
+                }
+                
+            }
+            
+            function summonEnemies() {
+                if (WAVE_TIMER == 1) {
+                    var randomNum = Randomizer.nextInt(1,5);
+                    for (var i = 0; i <= randomNum; i++) {
+                        
+                        var enemyX = Randomizer.nextInt(0, X-ENEMY_SIZE);
+                        var enemyY = Randomizer.nextInt(-ENEMY_SIZE*3, -ENEMY_SIZE);
+                        ENEMIES[i].setPosition(enemyX, enemyY);
+                        ENEMIES[i].isActive = true;
+                        add(ENEMIES[i]);
+                        INTERVALS.push(setInterval(fireEnemyBullet, 300*SPEED_MULTIPLIER, ENEMIES[i]));
+                        INTERVALS.push(setInterval(enemyMovement, 40*SPEED_MULTIPLIER, ENEMIES[i]));
+                    }
+                }else if (WAVE_TIMER == 2) {
+                    var randomNum = Randomizer.nextInt(5,8);
+                    for (var i = 0; i <= randomNum; i++) {
+                        var enemyX = Randomizer.nextInt(0, X-ENEMY_SIZE);
+                        var enemyY = Randomizer.nextInt(-ENEMY_SIZE*3, -ENEMY_SIZE);
+                        ENEMIES[i].setPosition(enemyX, enemyY);
+                        ENEMIES[i].isActive = true;
+                        add(ENEMIES[i]);
+                        INTERVALS.push(setInterval(fireEnemyBullet, 300*SPEED_MULTIPLIER, ENEMIES[i]));
+                        INTERVALS.push(setInterval(enemyMovement, 40*SPEED_MULTIPLIER, ENEMIES[i]));
+                    }
+                }else if (WAVE_TIMER == 3) {
+                    var randomNum = Randomizer.nextInt(8,16);
+                    for (var i = 0; i <= randomNum; i++) {
+                        var enemyX = Randomizer.nextInt(0, X-ENEMY_SIZE);
+                        var enemyY = Randomizer.nextInt(-ENEMY_SIZE*3, -ENEMY_SIZE);
+                        ENEMIES[i].setPosition(enemyX, enemyY);
+                        ENEMIES[i].isActive = true;
+                        add(ENEMIES[i]);
+                        INTERVALS.push(setInterval(fireEnemyBullet, 300*SPEED_MULTIPLIER, ENEMIES[i]));
+                        INTERVALS.push(setInterval(enemyMovement, 40*SPEED_MULTIPLIER, ENEMIES[i]));
+                    }
+                }else if (WAVE_TIMER == 4) {
+                    var randomNum = Randomizer.nextInt(16,20);
+                    for (var i = 0; i <= randomNum; i++) {
+                        var enemyX = Randomizer.nextInt(0, X-ENEMY_SIZE);
+                        var enemyY = Randomizer.nextInt(-ENEMY_SIZE*3, -ENEMY_SIZE);
+                        ENEMIES[i].setPosition(enemyX, enemyY);
+                        ENEMIES[i].isActive = true;
+                        add(ENEMIES[i]);
+                        INTERVALS.push(setInterval(fireEnemyBullet, 300*SPEED_MULTIPLIER, ENEMIES[i]));
+                        INTERVALS.push(setInterval(enemyMovement, 40*SPEED_MULTIPLIER, ENEMIES[i]));
+                    }
+                }else if (WAVE_TIMER == 5) {
+                    var randomNum = Randomizer.nextInt(20,25);
+                    for (var i = 0; i <= randomNum; i++) {
+                        var enemyX = Randomizer.nextInt(0, X-ENEMY_SIZE);
+                        var enemyY = Randomizer.nextInt(-ENEMY_SIZE*3, -ENEMY_SIZE);
+                        ENEMIES[i].setPosition(enemyX, enemyY);
+                        ENEMIES[i].isActive = true;
+                        add(ENEMIES[i]);
+                        INTERVALS.push(setInterval(fireEnemyBullet, 300*SPEED_MULTIPLIER, ENEMIES[i]));
+                        INTERVALS.push(setInterval(enemyMovement, 40*SPEED_MULTIPLIER, ENEMIES[i]));
+                    }
+                }else if (WAVE_TIMER == 6) {
+                    var randomNum = Randomizer.nextInt(25,30);
+                    for (var i = 0; i <= randomNum; i++) {
+                        var enemyX = Randomizer.nextInt(0, X-ENEMY_SIZE);
+                        var enemyY = Randomizer.nextInt(-ENEMY_SIZE*3, -ENEMY_SIZE);
+                        ENEMIES[i].setPosition(enemyX, enemyY);
+                        ENEMIES[i].isActive = true;
+                        add(ENEMIES[i]);
+                        INTERVALS.push(setInterval(fireEnemyBullet, 300*SPEED_MULTIPLIER, ENEMIES[i]));
+                        INTERVALS.push(setInterval(enemyMovement, 40*SPEED_MULTIPLIER, ENEMIES[i]));
+                    }
+                }else if (WAVE_TIMER == 7) {
+                    var randomNum = Randomizer.nextInt(30,35);
+                    for (var i = 0; i < randomNum; i++) {
+                        var enemyX = Randomizer.nextInt(0, X-ENEMY_SIZE);
+                        var enemyY = Randomizer.nextInt(-ENEMY_SIZE*3, -ENEMY_SIZE);
+                        ENEMIES[i].setPosition(enemyX, enemyY);
+                        ENEMIES[i].isActive = true;
+                        add(ENEMIES[i]);
+                        INTERVALS.push(setInterval(fireEnemyBullet, 300*SPEED_MULTIPLIER, ENEMIES[i]));
+                        INTERVALS.push(setInterval(enemyMovement, 40*SPEED_MULTIPLIER, ENEMIES[i]));
+                    }
+                }else if (WAVE_TIMER == 8) {
+                    var randomNum = Randomizer.nextInt(40,45);
+                    for (var i = 0; i < randomNum; i++) {
+                        var enemyX = Randomizer.nextInt(0, X-ENEMY_SIZE);
+                        var enemyY = Randomizer.nextInt(-ENEMY_SIZE*3, -ENEMY_SIZE);
+                        ENEMIES[i].setPosition(enemyX, enemyY);
+                        ENEMIES[i].isActive = true;
+                        add(ENEMIES[i]);
+                        INTERVALS.push(setInterval(fireEnemyBullet, 300*SPEED_MULTIPLIER, ENEMIES[i]));
+                        INTERVALS.push(setInterval(enemyMovement, 40*SPEED_MULTIPLIER, ENEMIES[i]));
+                    }
+                }else if (WAVE_TIMER == 9) {
+                    var randomNum = Randomizer.nextInt(45,50);
+                    for (var i = 0; i < randomNum; i++) {
+                        var enemyX = Randomizer.nextInt(0, X-ENEMY_SIZE);
+                        var enemyY = Randomizer.nextInt(-ENEMY_SIZE*3, -ENEMY_SIZE);
+                        ENEMIES[i].setPosition(enemyX, enemyY);
+                        ENEMIES[i].isActive = true;
+                        add(ENEMIES[i]);
+                        INTERVALS.push(setInterval(fireEnemyBullet, 300*SPEED_MULTIPLIER, ENEMIES[i]));
+                        INTERVALS.push(setInterval(enemyMovement, 40*SPEED_MULTIPLIER, ENEMIES[i]));
+                    }
+                }else {
+                    for (var i = 0; i<ENEMIES.length; i++) {
+                        var enemyX = Randomizer.nextInt(0, X-ENEMY_SIZE);
+                        var enemyY = Randomizer.nextInt(-ENEMY_SIZE*3, -ENEMY_SIZE);
+                        ENEMIES[i].setPosition(enemyX, enemyY);
+                        ENEMIES[i].isActive = true;
+                        add(ENEMIES[i]);
+                        INTERVALS.push(setInterval(fireEnemyBullet, 300*SPEED_MULTIPLIER, ENEMIES[i]));
+                        INTERVALS.push(setInterval(enemyMovement, 40*SPEED_MULTIPLIER, ENEMIES[i]));
+                    }
+                }
+            }
+            
+            function enemyMovement(enemy) {
+                enemy.move(0, 1);
+                if (enemy.getY() > Y) {
+                    remove(enemy);
+                    clearInterval(enemyMovement);
+                }
+            }
+            
+            function flyEnemyBullet(bullet) {
+                bullet.move(0, 6);
+                if (bullet.getY()+bullet.getHeight()>= getHeight()) {
+                    remove(bullet);
+                    return;
+                }
+                var elementAtBulletPos = getElementAt(bullet.getX(), bullet.getY()+bullet.getHeight());
+                if (elementAtBulletPos !== null) {    
+                    if (elementAtBulletPos.type == "player") {
+                        remove(bullet);
+                        HEALTH-=1;
+                        return;
+                    }
+                }
+            }
+            
+            function powerUp() {
+                    spawnHealthUp();
+                    spawnDoubleShot();
+                    spawnShotgun();
+            }
+            
+            function spawnHealthUp() {
+                add(HEALTH_POWER_UP);
+                INTERVALS2.push(setInterval(checkPowerUpHealth, 1*SPEED_MULTIPLIER, HEALTH_POWER_UP));
+                setTimeout(removePowerUp, 3000*SPEED_MULTIPLIER, HEALTH_POWER_UP);
+            }
+            
+            function spawnDoubleShot() {
+                add(POWER_UP_DOUBLE_SHOT);
+                INTERVALS2.push(setInterval(checkPowerUpHealth, 1, POWER_UP_DOUBLE_SHOT));
+                setTimeout(removePowerUp, 3000*SPEED_MULTIPLIER, POWER_UP_DOUBLE_SHOT);
+            }
+            
+            function spawnShotgun() {
+                add(POWER_UP_SHOTGUN);
+                INTERVALS2.push(setInterval(checkPowerUpHealth, 1*SPEED_MULTIPLIER, POWER_UP_SHOTGUN));
+                setTimeout(removePowerUp, 3000*SPEED_MULTIPLIER, POWER_UP_SHOTGUN);
+            }
+            
+            function removePowerUp(powerUp) {
+                remove(powerUp);  
+            }
+            
+            function checkPowerUpHealth(powerUp) {
+                if (powerUp == HEALTH_POWER_UP && POWER_UP_HEALTH_HP <= 0) {
+                    HEALTH+=40;
+                    POWER_UP_HEALTH_HP = 5;
+                    remove(HEALTH_POWER_UP);
+                }else if (powerUp == POWER_UP_DOUBLE_SHOT && POWER_UP_DOUBLE_SHOT_HP <= 0) {
+                    DOUBLE_SHOT = true;
+                    POWER_UP_DOUBLE_SHOT_HP = 5;
+                    SHOTGUN = false;
+                    remove(POWER_UP_DOUBLE_SHOT);
+                    setTimeout(powerUpTimer, 10000*SPEED_MULTIPLIER, DOUBLE_SHOT);
+                }else if (powerUp == POWER_UP_SHOTGUN && POWER_UP_SHOTGUN_HP <=0) {
+                    SHOTGUN = true;
+                    POWER_UP_SHOTGUN_HP = 5;
+                    DOUBLE_SHOT = false;
+                    remove(POWER_UP_SHOTGUN);
+                    setTimeout(powerUpTimer, 10000*SPEED_MULTIPLIER, SHOTGUN);
+                }
+            }
+            
+            function powerUpTimer(powerUp) {
+                if (powerUp == SHOTGUN) {
+                    SHOTGUN = false;
+                }else if (powerUp == DOUBLE_SHOT) {
+                    DOUBLE_SHOT = false;
+                }
+            }
+            
+            
+            
+            function spawnBoss() {
+                if (BOSS_ALIVE == false) {
+                    var boss = new WebImage("https://codehs.com/uploads/63e423d38591830aa9ce5b32821e8935");
+                    boss.setSize(192, 192);
+                    boss.setPosition(CENTER_X-boss.getWidth()/2, CENTER_Y-boss.getHeight());
+                    boss.type="boss";
+                    add(boss);
+                    BOSS_ALIVE = true;
+                    INTERVALS.push(setInterval(bossBullet, 500, boss));
+                    INTERVALS.push(setInterval(bossMovement, 100, boss));
+                    WAVE_TIMER = 0;
+                    return;
+                }
+            }
+            
+            function bossBullet(boss) {
+                if (BOSS_ALIVE == true) {
+                    var bullet = new Oval(10, 20);
+                    var bullet2 = new Oval(10,20);
+                    var bullet3 = new Oval(10, 20);
+                    var bullet4 = new Oval(10, 20);
+                    var bullet5 = new Oval(10, 20);
+                    bullet.setPosition(boss.getX()+boss.getWidth()/2, boss.getY()+boss.getHeight()/2);
+                    bullet2.setPosition(boss.getX()+boss.getWidth()/2, boss.getY()+boss.getHeight()/2);
+                    bullet3.setPosition(boss.getX()+boss.getWidth()/2, boss.getY()+boss.getHeight()/2);
+                    bullet4.setPosition(boss.getX()+boss.getWidth()/2, boss.getY()+boss.getHeight()/2);
+                    bullet5.setPosition(boss.getX()+boss.getWidth()/2, boss.getY()+boss.getHeight()/2);
+                    bullet.setColor(Color.red);
+                    bullet2.setColor(Color.red);
+                    bullet3.setColor(Color.red);
+                    bullet4.setColor(Color.red);
+                    bullet5.setColor(Color.red);
+                    bullet.type = "bullet";
+                    bullet2.type = "bullet";
+                    bullet3.type = "bullet";
+                    bullet4.type = "bullet";
+                    bullet5.type = "bullet";
+                    add(bullet);
+                    add(bullet2);
+                    add(bullet3);
+                    add(bullet4);
+                    add(bullet5);
+                    INTERVALS2.push(setInterval(flyBossBullet, 20*SPEED_MULTIPLIER, bullet, bullet2, bullet3, bullet4, bullet5));
+                }
+            }
+            
+            function flyBossBullet(bullet, bullet2, bullet3, bullet4, bullet5) {
+                bullet.move(0, 6);
+                bullet2.move(5, 6);
+                bullet3.move(15, 10);
+                bullet4.move(-5, 6);
+                bullet5.move(-15, 10);
+                if (bullet.getY() > Y) {
+                    remove(bullet);   
+                }
+                if (bullet2.getY() > Y) {
+                    remove(bullet2);   
+                }
+                if (bullet3.getY() > Y) {
+                    remove(bullet3);   
+                }
+                if (bullet4.getY() > Y) {
+                    remove(bullet4);
+                }
+                if (bullet5.getY() > Y) {
+                    remove(bullet5);   
+                }
+                checkCollision(bullet);
+                checkCollision(bullet2);
+                checkCollision(bullet3);
+                checkCollision(bullet4);
+                checkCollision(bullet5);
+            }
+            
+            function checkCollision(bulletT) {
+                var elementAtBulletPos = getElementAt(bulletT.getX(), bulletT.getY()+bulletT.getHeight());
+                if (elementAtBulletPos !== null) {
+                    if (elementAtBulletPos.type !== null) {
+                        if (elementAtBulletPos.type == "player") {
+                            HEALTH-=1;
+                            remove(bulletT);
+                        }
+                    }
+                }
+            }
+            
+            function bossMovement(boss) {
+                boss.move(BOSS_X, 0);
+                if (boss.getX() + boss.getWidth()>= X) {
+                       BOSS_X = -BOSS_X
+                }
+                if (boss.getX() <= 0) {
+                    BOSS_X = -BOSS_X;   
+                }
+            }
+            
+            function clearIntervals() {
+                for (var i=0; i<INTERVALS.length; i++) {
+                    var int = INTERVALS.pop();
+                    clearInterval(int);
+                    i--;
+                    //console.log("Clearing: " + INTERVALS);
+                }
+            }
+            
+            function clearIntervals2() {
+                for (var i=0; i<INTERVALS2.length; i++) {
+                    var int = INTERVALS2.pop();
+                    clearInterval(int);
+                    i--;
+                }
+            }
+            
+            function lose() {
+                cancelAnimationFrame(windex);
+                clearIntervals();
+                clearIntervals2();
+                removeAll();
+                var gameOver = new Text('Game Over!');
+                gameOver.setPosition(CENTER_X-gameOver.getWidth()/2, CENTER_Y-gameOver.getHeight()/2);
+                add(gameOver);
+                var highScore = new Text('Score: '+SCORE);
+                highScore.setPosition(CENTER_X-gameOver.getX()/2, gameOver.getY()+highScore.getHeight());
+                add(highScore);
+                var reset = new Text("Press 'r' to reset.");
+                reset.setPosition(CENTER_X-highScore.getX()/2, highScore.getY()+reset.getHeight());
+                add(reset);
+                keyDownMethod(reset1);
+            }
+            
+            function reset1(e) {
+                   if (e.keyCode == Keyboard.letter('r')) {
+                        gameStarted = false;
+                        WAVE_TIMER = 0;
+                        removeAll();
+                        SCORE = 0;
+                        HEALTH = 100;
+                        start();
+                        return;
+                   }
+            }
+                if (typeof start === 'function') {
+                    start();
+                }
+            };
+            </script>
+        </div>
+    </body>
+</html>

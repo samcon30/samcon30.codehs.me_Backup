@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+    <html lang="eng" dir="ltr">
+        <head>
+            <meta charset="utf-8">
+            <title>Helicopter Helicopter</title>
+            <link href="index.css" type="text/css" rel="stylesheet">
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+            <script type="text/javascript" src="https://static.codehs.com/gulp/80550f5fc4071985bfef352d04f005ca3de931d3/chs-js-lib/chs.js"></script>
+        </head>
+    <body> 
+        <div class="body">
+            <header>
+                <h1>Game Design and Development Class </h1>
+                <nav>
+                    <ul id="buttons">
+                        <li><a href="index.html">Home</a></li>
+                    </ul>
+                </nav>
+            </header>
+            <img
+            id="myImage3"
+            src="https://images.cooltext.com/5667329.png"
+            alt="samcon30" />
+        
+            <! this is the code for my button at the bottom it also adds an id for formating with CSS 
+            otherwise apon click it acts like a hyperlink and takes you to my youtbe channel>
+            <button id="button" onclick = "window.location.href='https://www.youtube.com/@Samcon30';"></button>
+            <canvas
+            width="400"
+            height="500"
+            class="codehs-editor-canvas"></canvas>
+            <pre id="console"></pre>
+            <script>
+                window.onload = function() {
+                    setSize(1024, 768);
+                    // Player
+                    var SPEED = 6;
+                    var copter;
+                    var dy = 0;
+                    var clicking = false;
+                    var MAX_DY = 12;
+                    
+                    //Canvas
+                    var X = getWidth();
+                    var Y = getHeight();
+                    var CENTER_X = X/2;
+                    var CENTER_Y = Y/2;
+                    var HELICOPTER = new Text ("Helicopter Helicopter");
+                    var GAME_START_TUTORIAL = new Text ("Press any button or mouse to start the Game.");
+                    var TUTORIAL = new Text ("Hold down any button or mouse to fly up.");
+                    
+                    //Functional Oddities
+                    var windex;
+                    var GAME_STARTED;
+                    var TIMEOUTS = [];
+                    
+                    //Game
+                    var POINTS_PER_ROUND = 1;
+                    var score;
+                    var points=0;
+                    
+                    //Obstacles
+                    var obstacles = [];
+                    var OBST_H = 120;
+                    var OBST_W = 30;
+                    var NUM_OBSTACLES = Number(prompt("How many Obstacles? (reccomended 6-12)"));
+                    
+                    //Terrain
+                    var TERRAIN_WIDTH = 10;
+                    var MIN_TERRAIN_HEIGHT = 10;
+                    var MAX_TERRAIN_HEIGHT = 85;
+                    var top_terrain = [];
+                    var bottom_terrain = [];
+                    
+                    //Dust
+                    var DUST_RADIUS = 3;
+                    var DUST_BUFFER = 10;
+                    var dust = [];
+                    
+                    //Power-Up's
+                    var POWER_UP_GO_SPEED = false;
+                    var POWER_UP_GO_SLOW = false;
+                    var PowSize = 50;
+                    var PowerUpSpeed;
+                    var PowerUpSlow;
+                    
+                    function start(){
+                    	setup();
+                    	HELICOPTER.setColor(Color.blue);
+                    	HELICOPTER.setPosition(CENTER_X-HELICOPTER.getWidth()/2, Y/4);
+                    	add(HELICOPTER);
+                    	GAME_START_TUTORIAL.setColor(Color.blue);
+                    	GAME_START_TUTORIAL.setPosition(CENTER_X-GAME_START_TUTORIAL.getWidth()/2, (Y/4)*2);
+                    	add(GAME_START_TUTORIAL);
+                    	TUTORIAL.setColor(Color.blue);
+                    	TUTORIAL.setPosition(CENTER_X-TUTORIAL.getWidth()/2, (Y/4)*3);
+                    	add(TUTORIAL);
+                    	keyDownMethod(gameStart);
+                    	mouseDownMethod(gameStart);
+                    }
+                    
+                    function setup() {
+                        GAME_STARTED = false;
+                        setBackgroundColor(Color.black);
+                        copter = new WebImage("https://codehs.com/uploads/fc441749f475620a34b8d3013d637177");
+                        copter.setSize(50, 25);
+                        copter.setColor(Color.blue);
+                        copter.setPosition(X/3, CENTER_Y);
+                        add(copter);
+                        
+                        score=new Text("0");
+                        score.setColor(Color.white);
+                        score.setPosition(0+score.getWidth(), 0+MAX_TERRAIN_HEIGHT+score.getHeight()); 
+                        score.layer = 20;
+                        add(score);
+                        
+                        PowerUpSpeed = new WebImage("https://codehs.com/uploads/65ca67d341ff692fbfa3f8de2a014730");
+                        PowerUpSlow = new WebImage("https://codehs.com/uploads/b542389c840cb12667cd4a4b1d6803b6");
+                        PowerUpSpeed.setSize(PowSize, PowSize);
+                        PowerUpSlow.setSize(PowSize, PowSize);
+                        PowerUpSpeed.setPosition(X+PowSize, Randomizer.nextInt(0+MAX_TERRAIN_HEIGHT+PowSize, Y-MAX_TERRAIN_HEIGHT-PowSize));
+                        PowerUpSlow.setPosition(X+PowSize, Randomizer.nextInt(0+MAX_TERRAIN_HEIGHT+PowSize, Y-MAX_TERRAIN_HEIGHT-PowSize));
+                        PowerUpSpeed.isActive = false;
+                        TIMEOUTS.push(setTimeout(add, 5000, PowerUpSpeed));
+                        TIMEOUTS.push(setTimeout(add, 5000, PowerUpSlow));
+                        
+                        addObstacles();
+                        addTerrain();
+                        
+                    }
+                    
+                    function gameStart() {
+                        if (GAME_STARTED == false) {
+                            GAME_STARTED = true;
+                            windex = requestAnimationFrame(game);
+                        	mouseDownMethod(onMouseDown);
+                        	mouseUpMethod(onMouseUp);
+                        	keyDownMethod(onMouseDown);
+                        	keyUpMethod(onMouseUp); 
+                        }
+                    }
+                    
+                    function updateScore() {
+                        points += POINTS_PER_ROUND;
+                        points = Math.floor(points);
+                        score.setText(points);
+                    }
+                    
+                    function powerUpSpeedOff() {
+                        SPEED-=100;
+                        TIMEOUTS.push(setTimeout(add, 5000, PowerUpSpeed));
+                        TIMEOUTS.push(setTimeout(collisionOn, 3000));
+                        addTerrain();
+                    }
+                    
+                    function powerUpSlowOff() {
+                        SPEED+=4;   
+                        TIMEOUTS.push(setTimeout(add, 5000, PowerUpSlow));
+                    }
+                    
+                    function collisionOn() {
+                        PowerUpSpeed.isActive=false;   
+                    }
+                    
+                    function game() {
+                        updateScore();
+                        remove(HELICOPTER);
+                        remove(GAME_START_TUTORIAL);
+                        remove(TUTORIAL);
+                        if (POWER_UP_GO_SPEED == true) {
+                            POWER_UP_GO_SPEED = false;
+                            SPEED+=100;
+                            TIMEOUTS.push(setTimeout(powerUpSpeedOff, 5000));
+                            TIMEOUTS.push(setTimeout(add, 5000, PowerUpSlow));
+                        }
+                        if (POWER_UP_GO_SLOW == true) {
+                            POWER_UP_GO_SLOW = false;
+                            SPEED-=4;
+                            TIMEOUTS.push(setTimeout(powerUpSlowOff, 5000));
+                            TIMEOUTS.push(setTimeout(add, 5000, PowerUpSpeed));
+                        }
+                        if (hitWall()) {
+                            if (PowerUpSpeed.isActive == false) {
+                                lose();  
+                                return;
+                            }
+                        }
+                        if (getCollider() != null && getCollider() != copter && getCollider() != PowerUpSpeed && getCollider() != PowerUpSlow) {
+                            if (PowerUpSpeed.isActive == false) {
+                                lose();
+                                return;
+                            }
+                        }
+                        copter.move(0, dy);
+                        if (getCollider() != null && getCollider() != copter && getCollider() != PowerUpSpeed && getCollider() != PowerUpSlow) {
+                            if (PowerUpSpeed.isActive == false) {
+                                lose();
+                                return;
+                            }
+                        }
+                        if (getCollider() == PowerUpSpeed) {
+                            POWER_UP_GO_SPEED = true;
+                            PowerUpSpeed.isActive = true;
+                            remove(PowerUpSlow);
+                            remove(PowerUpSpeed);
+                        }
+                        if (getCollider() == PowerUpSlow) {
+                            POWER_UP_GO_SLOW = true;  
+                            remove(PowerUpSlow);
+                            remove(PowerUpSpeed);
+                        }
+                        if (clicking) {
+                            dy -= 0.2;
+                            if (dy < -MAX_DY) {
+                                dy = -MAX_DY;   
+                            }  
+                        }else{
+                            dy += 0.2;
+                            if (dy > MAX_DY) {
+                                dy = MAX_DY;   
+                            }
+                        }
+                        if (getCollider() != null && getCollider() != copter && getCollider() != PowerUpSpeed && getCollider() != PowerUpSlow) {
+                            if (PowerUpSpeed.isActive == false) {
+                                lose();
+                                return;
+                            }
+                        }
+                        moveObstacles();
+                        moveTerrain();
+                        moveDust();
+                        addDust();
+                        SPEED += 0.00000001;
+                        movePowerUps();
+                        POINTS_PER_ROUND = (SPEED/6)*(NUM_OBSTACLES/6);
+                        if (SPEED <=0) {
+                            SPEED += 6;
+                        }
+                        windex = requestAnimationFrame(game);
+                    }
+                    
+                    function onMouseDown(e) {
+                        clicking = true;
+                    }
+                    
+                    function onMouseUp(e) {
+                        clicking = false;
+                    }
+                    
+                    function addObstacles() {
+                        for (var i=0; i<NUM_OBSTACLES; i++) {
+                            var obstacle = new Rectangle(OBST_W, OBST_H);
+                            obstacle.setColor(Color.green);
+                            obstacle.setPosition(X+i*(X/NUM_OBSTACLES), Randomizer.nextInt(0+MAX_TERRAIN_HEIGHT, Y-OBST_H-MAX_TERRAIN_HEIGHT));
+                            obstacles.push(obstacle);
+                            add(obstacle);
+                        }
+                    }
+                    
+                    function moveObstacles() {
+                        for (var i=0; i<obstacles.length; i++) {
+                            var obstacle = obstacles[i];
+                            obstacle.move(-SPEED, 0);
+                            if (obstacle.getX() <= 0) {
+                               obstacle.setPosition(X, Randomizer.nextInt(0+MAX_TERRAIN_HEIGHT, Y-OBST_H-MAX_TERRAIN_HEIGHT));
+                            }
+                        }
+                    }
+                    
+                    function movePowerUps() {
+                        PowerUpSpeed.move(-SPEED, 0);
+                        PowerUpSlow.move(-SPEED, 0);
+                        if (PowerUpSpeed.getX() <= 0) {
+                               PowerUpSpeed.setPosition(X+PowSize, Randomizer.nextInt(0+MAX_TERRAIN_HEIGHT+PowSize, Y-MAX_TERRAIN_HEIGHT-PowSize));
+                               remove(PowerUpSpeed);
+                               TIMEOUTS.push(setTimeout(add, 5000, PowerUpSpeed));
+                        }
+                        if (PowerUpSlow.getX() <= 0) {
+                               PowerUpSlow.setPosition(X+PowSize, Randomizer.nextInt(0+MAX_TERRAIN_HEIGHT+PowSize, Y-MAX_TERRAIN_HEIGHT-PowSize));
+                               remove(PowerUpSlow);
+                               TIMEOUTS.push(setTimeout(add, 5000, PowerUpSlow));
+                        }
+                    }
+                    
+                    function hitWall() {
+                        var hit_top = copter.getY() < 0;
+                        var hit_bottom = copter.getY() + copter.getHeight() > Y;
+                        return hit_top || hit_bottom;
+                    }
+                    
+                    function lose() {
+                        cancelAnimationFrame(windex);
+                        dy = 0;
+                        points = 0;
+                        SPEED = 6;
+                        var text = new Text("You Lose!");
+                        text.setColor(Color.red);
+                        text.setPosition(CENTER_X - text.getWidth()/2, CENTER_Y - text.getHeight()/2);
+                        add(text);
+                        var text1 = new Text ('Press "r" to reset.');
+                        text1.setColor(Color.red);
+                        text1.setPosition(CENTER_X-text1.getWidth()/2, text.getY()+text.getHeight()*4);
+                        add(text1);
+                        for (var i=0; i<=TIMEOUTS.length; i++) {
+                            clearTimeout(TIMEOUTS[i]);
+                        }
+                        var ti = TIMEOUTS.pop();
+                        while (ti != undefined) {
+                            ti = TIMEOUTS.pop();   
+                        }
+                            
+                        keyDownMethod(reset);
+                    }
+                    
+                    function reset(e) {
+                        if (e.key == "r") {
+                            if (GAME_STARTED == true) {
+                                GAME_STARTED = false;
+                                removeAll();
+                                start();
+                            }
+                        }
+                    }
+                    
+                    function getCollider() {
+                        var topLeft = getElementAt(copter.getX()-1, copter.getY()-1);
+                        if (topLeft != null) {
+                            return topLeft;   
+                        }
+                        
+                        var topRight = getElementAt(copter.getX() + copter.getWidth() + 1, copter.getY() - 1);
+                        if (topRight != null) {
+                            return topRight;   
+                        }
+                        
+                        var bottomLeft = getElementAt(copter.getX()-1, copter.getY()+copter.getHeight()+1);
+                        if (bottomLeft != null) {
+                            return bottomLeft;   
+                        }
+                        
+                        var bottomRight = getElementAt(copter.getX() + copter.getWidth() + 1, copter.getY() + copter.getHeight() + 1);
+                        if (bottomRight != null) {
+                            return bottomRight;   
+                        }
+                        
+                        return null;
+                    }
+                    
+                    function addTerrain() {
+                        for (var i = 0; i <= X/TERRAIN_WIDTH; i++) {
+                            var height = Randomizer.nextInt(MIN_TERRAIN_HEIGHT, MAX_TERRAIN_HEIGHT);
+                            var terrain = new Rectangle(TERRAIN_WIDTH, height);
+                            terrain.setPosition(TERRAIN_WIDTH*i, 0);
+                            terrain.setColor(Color.green);
+                            top_terrain.push(terrain);
+                            add(terrain);
+                            
+                            height = Randomizer.nextInt(MIN_TERRAIN_HEIGHT, MAX_TERRAIN_HEIGHT);
+                            var bottomTerrain = new Rectangle(TERRAIN_WIDTH, height);
+                            bottomTerrain.setPosition(TERRAIN_WIDTH*i, Y-bottomTerrain.getHeight());
+                            bottomTerrain.setColor(Color.green);
+                            bottom_terrain.push(bottomTerrain);
+                            add(bottomTerrain);
+                        }
+                    }
+                    
+                    function moveTerrain() {
+                        for (var i=0; i < top_terrain.length; i++) {
+                            var obj = top_terrain[i];
+                            obj.move(-SPEED, 0);
+                            if (obj.getX() < -obj.getWidth()) {
+                                obj.setPosition(X, 0);   
+                            }
+                        }
+                        for (var i=0; i < bottom_terrain.length; i++) {
+                            var obj = bottom_terrain[i];
+                            obj.move(-SPEED, 0);
+                            if (obj.getX() < -obj.getWidth()) {
+                                obj.setPosition(X, Y-obj.getHeight());   
+                            }
+                        }
+                    }
+                    
+                    function addDust() {
+                        var d = new Circle(DUST_RADIUS);
+                        d.setColor("#cccccc");
+                        d.setPosition(copter.getX() - d.getWidth(), copter.getY() + DUST_BUFFER);
+                        
+                        dust.push(d);
+                        add(d);
+                        
+                    }
+                    
+                    function moveDust() {
+                           for (var i=0; i<dust.length; i++) {
+                               var d = dust[i];
+                               d.move(-SPEED, 0);
+                               d.setRadius(d.getRadius() - 0.05);
+                               if (d.getX() < 0) {
+                                    remove(d);
+                                    dust.remove(i);
+                                    i--;
+                               }
+                           }
+                    }
+                    if (typeof start === 'function') {
+                        start();
+                    }
+                };
+            </script>
+            </div>
+        </body>
+    </html>

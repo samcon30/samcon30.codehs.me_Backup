@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+        <title>Game Design and Devolpment Class games</title>
+        
+        <link href="index.css" type="text/css" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="body">
+        <img 
+            id="myImage"
+            src="ova-jojo.gif"
+            alt="A gif of Dio Brando brutishly brandisihing big bitching blades"
+        />    
+        <img
+            id="myImage2"
+            src="DBGT.gif"
+            alt="A gif of Goku, Trunks, and Pan laughing at the viewer"
+        />
+       <header>
+       
+         <h1>Game Design and Devolpment Class </h1>
+            <nav>
+                <ul id="buttons">
+                    <li><a href="Holiday_Challenge.html">Holiday Challenge</a></li>
+                    <li><a href="SpaceShooter.html">SpaceShooter**(W.I.P)</a></li>
+                    <li><a href="Breakout.html">Breakout</a></li>
+                    <li><a href="Helicopter_Helicopter.html">Helicopter Helicopter</a></li>
+                    <li><a href="Worm!!!!!.html">Worm!!!!!</a></li>
+                    <li><a href="">Game 6(Placeholder) </a></li>
+                    <li><a href="">Game 7(Placeholder) </a></li>
+                    <li><a href="">Game 8(Placeholder) </a></li>
+                    <li><a href="">Game 9(Placeholder) </a></li>
+                    <li><a href="">Game 10(Placeholder) </a></li>
+                    <li><a href="">Game 11(Placeholder) </a></li>
+                    <li><a href="">Game 12(Placeholder) </a></li>
+                    <li><a href="">Game 13(Placeholder) </a></li>
+                    <li><a href="">Game 14(Placeholder) </a></li>
+                    <li><a href="Karel.html">Karel(Not my Game) </a></li>
+                    <li><a href="Affiliates.html">Affiliates</a></li>
+                </ul>
+            </nav>
+56        </header>
+        <p> Hello Welcome to my website my name is Samcon30 the purpose of 
+        this site is to host finished games made in my Game Development class.
+        </p>
+      
+            <img
+            id="myImage3"
+            src="https://images.cooltext.com/5667329.png" 
+            alt="Button opening the Youtube chanel Samcon30 in a new tab" />
+    
+            <button id="button"  onclick = "window.location.href='https://www.youtube.com/@Samcon30';"></button>
+
+    </div>
+  </body>
+</html>

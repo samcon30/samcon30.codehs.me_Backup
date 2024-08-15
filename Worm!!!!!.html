@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+    <html lang="eng" dir="ltr">
+        <head>
+            <meta charset="utf-8">
+            <title>Worm!!!!!</title>
+            <link href="index.css" type="text/css" rel="stylesheet">
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+            <script type="text/javascript" src="https://static.codehs.com/gulp/80550f5fc4071985bfef352d04f005ca3de931d3/chs-js-lib/chs.js"></script>
+        </head>
+    <body> 
+        <div class="body">
+            <header>
+                <h1>Game Design and Development Class </h1>
+                <nav>
+                    <ul id="buttons">
+                        <li><a href="index.html">Home</a></li>
+                    </ul>
+                </nav>
+            </header>
+            <img
+            id="myImage3"
+            src="https://images.cooltext.com/5667329.png"
+            alt="samcon30" />
+        
+            <! this is the code for my button at the bottom it also adds an id for formating with CSS 
+            otherwise apon click it acts like a hyperlink and takes you to my youtbe channel>
+            <button id="button" onclick = "window.location.href='https://www.youtube.com/@Samcon30';"></button>
+             <canvas
+                width="400"
+                height="500"
+                class="codehs-editor-canvas">
+            </canvas>
+            <pre id="console"></pre>
+             <p>Warning!: This game is<br> bugged on here. No idea <br> why. Sometimes it <br> works, sometimes it <br> doesn't. For a <br> non-bugged version try <br> <a href="https://codehs.com/sandbox/samcon30/snake">here.</a> I am sorry for <br> the inconvenience</p>   
+            <script> 
+            window.onload = function() {
+                //Text
+                var POINTS_TEXT_X = 5;
+                var POINTS_TEXT_Y_BUFFER = 5;
+                var POINTS_FONT = "17pt Arial";
+                var SCORE = 0;
+                var SCORE_TEXT;
+                var TITLE = new Text("WORM!");
+                var CONTROLS = new Text("WASD or Arrow Keys to change direction", "16pt Arial");
+                var PRESS = new Text("Press any button to begin.");
+                
+                //SNAKE SNAKE SNNNNAAAAAAKKKKEEE
+                var SNAKE_SPEED = 1;
+                var SNAKE_LENGTH = 1;
+                var SNAKE_DIM = 10;
+                var NORTH = 0;
+                var EAST = 1;
+                var SOUTH = 2;
+                var WEST = 3;
+                var SNAKE = [];
+                var snakeFacing = EAST;
+                var snakeX;
+                var snakeY;
+                var distance = 0;
+                
+                //FOOD
+                var FOOD_DELAY = 6000;
+                var FOOD_RADIUS = 5;
+                var FOOD;
+                
+                //Canvas
+                var X = getWidth();
+                var Y = getHeight();
+                var CENTER_X = X/2;
+                var CENTER_Y = Y/2;
+                
+                //Player
+                var player;
+                var playerX;
+                var playerY;
+                
+                //Functional Oddities
+                var windex;
+                var LOSE = false;
+                var GAME_STARTED = false;
+                var background;
+                
+                //text
+                var GAME_OVER = new Text("You Lose.");
+                
+                function start(){
+                    background = new Rectangle(X,Y);
+                    background.setColor(Color.white);
+                    add(background);
+                    TITLE.setPosition(CENTER_X-TITLE.getWidth()/2, TITLE.getHeight()+20);
+                    CONTROLS.setPosition(CENTER_X-CONTROLS.getWidth()/2, CENTER_Y-CONTROLS.getHeight()/2);
+                    PRESS.setPosition(CENTER_X-PRESS.getWidth()/2, CENTER_Y+PRESS.getHeight()*3);
+                    add(TITLE);
+                    add(CONTROLS);
+                    add(PRESS);
+                    keyDownMethod(setup);
+                }
+                
+                function setup(e) {
+                    changeDirection(e);
+                    if (GAME_STARTED == false) {
+                        remove(TITLE);
+                        remove(PRESS);
+                        remove(CONTROLS);
+                        windex = requestAnimationFrame(gameLoop);
+                        var snake = new Rectangle(SNAKE_DIM, SNAKE_DIM);
+                        snake.setColor(Color.green);
+                        snake.setPosition(CENTER_X-snake.getWidth()/2, CENTER_Y - snake.getHeight()/2);
+                        snake.layer = 1;
+                        add(snake);
+                        SNAKE.push(snake);
+                        player = new Rectangle(SNAKE_DIM, SNAKE_DIM);
+                        player.setColor(Color.white);
+                        player.setPosition(CENTER_X-player.getWidth()/2, CENTER_Y - player.getHeight()/2);
+                        player.layer = 0;
+                        add(player);
+                        spawnFood();
+                        SCORE_TEXT = new Text(SCORE, POINTS_FONT);
+                        SCORE_TEXT.setPosition(POINTS_TEXT_X, Y-POINTS_TEXT_Y_BUFFER);
+                        add(SCORE_TEXT);
+                        GAME_STARTED = true;
+                    }
+                }
+                
+                function gameLoop() {
+                    var snake = new Rectangle(SNAKE_DIM, SNAKE_DIM);
+                    snake.setColor(Color.green);
+                    snake.layer = 1;
+                    playerX = player.getX();
+                    playerY = player.getY();
+                    moveSnake(snake);
+                    if (SNAKE.length > SNAKE_LENGTH) {
+                           remove(SNAKE[0]);
+                           SNAKE.remove(0);
+                    }
+                    if (LOSE == true) {
+                        cancelAnimationFrame(windex);
+                        lost();
+                        return;
+                    }
+                    SCORE_TEXT.setText("SCORE: "+ SCORE);
+                    requestAnimationFrame(gameLoop);
+                    
+                }
+                
+                function changeDirection(e) {
+                    if (e.key == "ArrowLeft" || e.key == "a") {
+                        snakeFacing = WEST;   
+                    }else if (e.key == "ArrowRight" || e.key == "d") {
+                        snakeFacing = EAST;   
+                    }else if (e.key == "ArrowUp" || e.key == "w") {
+                        snakeFacing = NORTH;   
+                    }else if (e.key == "ArrowDown" || e.key == "s") {
+                        snakeFacing = SOUTH;   
+                    }
+                }
+                
+                function moveSnake(snake) {
+                    if (snakeFacing == EAST) {
+                        snake.setPosition(playerX, playerY);
+                        if (distance == 10) {
+                            add(snake);
+                            SNAKE.push(snake);
+                            distance = 0;
+                            SCORE++;
+                            checkCollision();
+                        }
+                        player.move(SNAKE_SPEED, 0);
+                        distance++;
+                    }else if (snakeFacing == NORTH) {
+                        snake.setPosition(playerX, playerY);
+                        if (distance == 10) {
+                            add(snake);
+                            distance = 0;
+                            SNAKE.push(snake);
+                            SCORE++;
+                            checkCollision();
+                        }
+                        player.move(0, -SNAKE_SPEED);
+                        distance++;
+                    }else if (snakeFacing == SOUTH) {
+                        snake.setPosition(playerX, playerY);
+                        if (distance == 10) {
+                            add(snake);
+                            distance = 0;
+                            SNAKE.push(snake);
+                            SCORE++;
+                            checkCollision();
+                        }
+                        player.move(0, SNAKE_SPEED);
+                        distance++;
+                    }else if (snakeFacing == WEST) {
+                        snake.setPosition(playerX, playerY);
+                        if (distance == 10) {
+                            add(snake);
+                            distance = 0;
+                            SNAKE.push(snake);
+                            SCORE++;
+                            checkCollision();
+                        }
+                        player.move(-SNAKE_SPEED, 0);
+                        distance++;
+                    }
+                    
+                }
+                
+                function checkCollision() {
+                    var num = SNAKE.length;
+                    var use = num-1;
+                    var snake = SNAKE[use];
+                    var obj = directionalCollision(snake);
+                    if (snake.getX() >= X) {
+                        GAME_OVER.setPosition(CENTER_X-GAME_OVER.getWidth()/2, CENTER_Y-GAME_OVER.getHeight()/2);
+                        add(GAME_OVER);
+                        LOSE = true;
+                    }
+                    if (snake.getX() <= 0) {
+                        GAME_OVER.setPosition(CENTER_X-GAME_OVER.getWidth()/2, CENTER_Y-GAME_OVER.getHeight()/2);
+                        add(GAME_OVER);
+                        LOSE = true;
+                    }
+                    if (snake.getY() >= Y) {
+                        GAME_OVER.setPosition(CENTER_X-GAME_OVER.getWidth()/2, CENTER_Y-GAME_OVER.getHeight()/2);
+                        add(GAME_OVER);
+                        LOSE = true;
+                    }
+                    if (snake.getY() <= 0) {
+                        GAME_OVER.setPosition(CENTER_X-GAME_OVER.getWidth()/2, CENTER_Y-GAME_OVER.getHeight()/2);
+                        add(GAME_OVER);
+                        LOSE = true;
+                    }
+                    if (obj !== null && obj !== FOOD && obj !== SCORE_TEXT && obj !== background) {
+                        GAME_OVER.setPosition(CENTER_X-GAME_OVER.getWidth()/2, CENTER_Y-GAME_OVER.getHeight()/2);
+                        add(GAME_OVER);
+                        LOSE = true;   
+                    }
+                    if (obj == FOOD) {
+                        FOOD.setPosition(Randomizer.nextInt(0+FOOD_RADIUS*2, X-FOOD_RADIUS*2), Randomizer.nextInt(0+FOOD_RADIUS*2, Y-FOOD_RADIUS*2));
+                        SNAKE_LENGTH+=1;
+                        SCORE+=100;
+                    }
+                }
+                
+                function directionalCollision(s) {
+                    var obj;
+                    if (snakeFacing == EAST) {
+                        obj = getElementAt(s.getX()+SNAKE_DIM+1, s.getY()+1);
+                        if (obj == null) {
+                            obj = getElementAt(s.getX()+SNAKE_DIM+1, s.getY()+SNAKE_DIM+1);
+                            if (obj == null) {
+                                obj = getElementAt(s.getX()+SNAKE_DIM+1, s.getY()+SNAKE_DIM/2);
+                            }
+                        }
+                        return obj;
+                    }else if (snakeFacing == SOUTH) {
+                        obj = getElementAt(s.getX()+SNAKE_DIM+1, s.getY()+SNAKE_DIM+1);
+                        if (obj == null) {
+                            obj = getElementAt(s.getX()+1, s.getY()+SNAKE_DIM+1);
+                            if (obj == null) {
+                                 obj = getElementAt(s.getX()+SNAKE_DIM/2, s.getY()+SNAKE_DIM+1);
+                            }
+                            return obj;
+                        }
+                        return obj;
+                    }else if (snakeFacing == WEST) {
+                        obj = getElementAt(s.getX()-1, s.getY()+1);
+                        if (obj == null) {
+                            obj = getElementAt(s.getX()-1, s.getY()+SNAKE_DIM+1);
+                            if (obj == null) {
+                                 obj = getElementAt(s.getX()-1, s.getY()+SNAKE_DIM/2+1);
+                            }
+                            return obj;
+                        }
+                        return obj;
+                    }else if (snakeFacing == NORTH) {
+                        obj = getElementAt(s.getX()-1, s.getY()-1);
+                        if (obj == null) {
+                            obj = getElementAt(s.getX()+SNAKE_DIM+1, s.getY()-1);
+                            if (obj == null) {
+                                 obj = getElementAt(s.getX()+SNAKE_DIM/2, s.getY()-1);
+                            }
+                            return obj;
+                        }
+                        return obj;
+                    }
+                }
+                
+                function spawnFood() {
+                    FOOD = new Circle(FOOD_RADIUS);
+                    FOOD.setColor(Color.red);
+                    FOOD.setPosition(Randomizer.nextInt(0+FOOD_RADIUS*2, X-FOOD_RADIUS*2), Randomizer.nextInt(0+FOOD_RADIUS*2, Y-FOOD_RADIUS*2));
+                    FOOD.layer=1;
+                    add(FOOD);
+                }
+                
+                function lost() {
+                    var reset = new Text("Press r to reset");
+                    reset.setPosition(CENTER_X-reset.getWidth()/2, CENTER_Y+reset.getHeight()*3);
+                    add(reset);
+                    keyDownMethod(reset1);
+                }
+                
+                function reset1(e) {
+                    if (e.key == "r") {
+                        if (GAME_STARTED == true) {
+                            removeAll();
+                            GAME_STARTED = false;
+                            SCORE=0;
+                            LOSE = false;
+                            SNAKE_LENGTH = 1;
+                            start();
+                        }
+                    }
+                }
+                if (typeof start === 'function') {
+                    start();
+                }
+            };
+            </script>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="eng" dir="ltr">
+    <head>
+        <meta charset="utf-8">
+        <title>Holiday Challenge</title>
+        <link href="index.css" type="text/css" rel="stylesheet">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+        <script type="text/javascript" src="https://static.codehs.com/gulp/80550f5fc4071985bfef352d04f005ca3de931d3/chs-js-lib/chs.js"></script>
+    </head>
+    <body>
+        <div class="body">
+            <header>
+                <h1>Game Design and Development Class</h1>
+                    <nav>
+                        <ul id="buttons">
+                            <li> <a href="index.html">Home</a></li>
+                        </ul>
+                </nav>
+            </header>
+        <img
+        id = "myImage3"
+        src = "https://images.cooltext.com/5667329.png"
+        alt = "samcon30"   />
+        
+        <!this is the code for my button at the bottom it also adds an id for formating with CSS
+        otherwise apon click it acts like a hyperlink and takes you to my youtbe channel>
+        <button id="button" onclick ="window.location.href='https://www.youtube.com/@Samcon30';"> </button>
+        <canvas
+        width="400"
+        height="500"
+        class="codehs-editor-canvas"></canvas>
+        <pre id="console"></pre>
+        
+        <script>
+         window.onload = function() {
+                               /* As I am yet to program a tutorial this comment will explain gameplay for now
+                this is a basic high score based game where you must click on the red bauble.
+                If you click on a non-red Bauble it will cause you to lose time you start with 30 time in 
+                seconds and it counts down each second, clicking on a non-red bauble decreases time by 15
+                simply hovering over a non-red bauble decreases time by 10.
+                Clicking on a red bauble increases score by 5 and time by 7.
+                Survive as long as you can without running out of time.
+                When you do it is Game Over at which point the game will lockup and a game over screen
+                showing the current score will show.
+                */
+                
+                var circle, circle2, circle3, circle4;
+                var rect, rect2, rect3, rect4;
+                var dx = 4, dy = 4, dx2 = 5, dy2 = 5, dx3 = 6, dy3 = 6, dx4 = 7, dy4 = 7;
+                var colors = ["red", "blue", "green", "purple", "orange", "red", "red"];
+                var CENTER_X = getWidth()/2;
+                var CENTER_Y = getHeight()/2;
+                var SCORE = 0
+                var INTRO_1 = new Text("Click red baubles to increase score and time.","15pt Arial");
+                var INTRO_2 = new Text("Click anything else, and your time will be reduced faster.","10pt Arial");
+                var INTRO_3 = new Text("Hover over anything other than a red bauble, and your time wil be reduced.","9pt Arial");
+                var INTRO_4 = new Text("Click to start the game.","20pt Arial");
+                var gameStarted = false;
+                var X = getWidth();
+                var Y = getHeight();
+                var TIME = 30;
+                var MOUSE_X;
+                var MOUSE_Y;
+                var INTERVALS = [];
+                var SCORE_TEXT = new Text("SCORE: " + SCORE);
+                var TIME_TEXT = new Text("TIME: " + TIME);
+                var randomizer = {
+                    nextColor: function() {
+                        var randomIndex = Math.floor(Math.random() * colors.length);
+                        return colors[randomIndex];
+                    }
+                };
+                
+                
+                function start() {
+                    var test = new Rectangle(X,Y);
+                    test.setColor(Color.white);
+                    add(test);
+                    INTRO_1.setPosition(CENTER_X-INTRO_1.getWidth()/2, CENTER_Y+INTRO_1.getHeight()*3);
+                    INTRO_2.setPosition(CENTER_X-INTRO_2.getWidth()/2, CENTER_Y+INTRO_2.getHeight()*2);
+                    INTRO_3.setPosition(CENTER_X-INTRO_3.getWidth()/2, CENTER_Y+INTRO_3.getHeight());
+                    INTRO_4.setPosition(CENTER_X-INTRO_4.getWidth()/2, CENTER_Y+INTRO_4.getHeight()*-2);
+                    add(INTRO_1);
+                    add(INTRO_2);
+                    add(INTRO_3);
+                    add(INTRO_4);
+                    mouseClickMethod(startGame);
+                }
+                
+                function startGame() {
+                    if (gameStarted == false){
+                        gameStarted = true;
+                        remove(INTRO_1);
+                        remove(INTRO_2);
+                        remove(INTRO_3);
+                        remove(INTRO_4);
+                        setup();
+                        mouseClickMethod(isRed);
+                        mouseMoveMethod(checkMouseCoords);
+                        INTERVALS.push(setInterval(move, 20));
+                        INTERVALS.push(setInterval(changeColor, 2000));
+                        INTERVALS.push(setInterval(isBaubleRed, 300));
+                        INTERVALS.push(setInterval(time, 1000));
+                    }
+                }
+                function setup() {
+                    var background = new Rectangle(X, Y);
+                    background.setColor(Color.white);
+                    add(background);
+                    circle = new Circle(30);
+                    circle2 = new Circle(30);
+                    circle3 = new Circle(30);
+                    circle4 = new Circle(30);
+                    rect = new Rectangle(15, 25);
+                    rect2 = new Rectangle(15, 25);
+                    rect3 = new Rectangle(15, 25);
+                    rect4 = new Rectangle(15, 25);
+                    circle.setPosition(Randomizer.nextInt(0+circle.getRadius(), getWidth()-circle.getRadius()), 100);
+                    circle2.setPosition(200,200);
+                    circle3.setPosition(300, 300);
+                    circle4.setPosition(300, 400);
+                    rect.setPosition(circle.getX() - 15 + 7.5, circle.getY()-45);
+                    rect2.setPosition(circle2.getX() - 15 + 7.5, circle2.getY()-45);
+                    rect3.setPosition(circle3.getX() - 15 + 7.5, circle3.getY()-45);
+                    rect4.setPosition(circle4.getX() - 15 + 7.5, circle4.getY()-45);
+                    rect.setColor(Color.yellow);
+                    rect2.setColor(Color.yellow);
+                    rect3.setColor(Color.yellow);
+                    rect4.setColor(Color.yellow);
+                    SCORE_TEXT.setPosition(0, 0+SCORE_TEXT.getHeight());
+                    TIME_TEXT.setPosition(getWidth() - TIME_TEXT.getWidth(), 0+TIME_TEXT.getHeight());
+                    add(circle);
+                    add(circle2);
+                    add(circle3);
+                    add(circle4);
+                    add(rect);
+                    add(rect2);
+                    add(rect3);
+                    add(rect4);
+                    add(SCORE_TEXT);
+                    add(TIME_TEXT);
+                }
+                function move() {
+                    checkCollision();
+                
+                    // Move circles
+                    circle.move(dx, dy);
+                    circle2.move(dx2, dy2);
+                    circle3.move(dx3, dy3);
+                    circle4.move(dx4, dy4);
+                
+                    // Update rectangle positions to be aligned with circles
+                    updateRectPosition(circle, rect);
+                    updateRectPosition(circle2, rect2);
+                    updateRectPosition(circle3, rect3);
+                    updateRectPosition(circle4, rect4);
+                    
+                    //Error corection in case of bauble fusion
+                    fusionGlitch(circle, circle2);
+                    fusionGlitch(circle, circle3);
+                    fusionGlitch(circle, circle4);
+                    fusionGlitch(circle2, circle3); 
+                    fusionGlitch(circle2, circle4);
+                    fusionGlitch(circle3, circle4);
+                    
+                    //Error corection in cause of bauble leaving playspace
+                    wallGlitch(circle);
+                    wallGlitch(circle2);
+                    wallGlitch(circle3);
+                    wallGlitch(circle4);
+                }
+                
+                function checkCollision() {
+                    
+                    //Check wall collision
+                    wallCollision(circle);
+                    wallCollision(circle2);
+                    wallCollision(circle3);
+                    wallCollision(circle4);
+                    
+                    //Check bauble to bauble collision
+                    if (getDistance(circle, circle2) <= (circle.getRadius() + circle2.getRadius())) {
+                     dx = -dx;
+                     dy = -dy;
+                     dx2 = -dx2;
+                     dy2 = -dy2;
+                    }
+                    
+                    if (getDistance(circle, circle3) <= (circle.getRadius() + circle3.getRadius())) {
+                        dx = -dx;
+                        dy = -dy;
+                        dx3 = -dx3;
+                        dy3 = -dy3;
+                    }
+                    
+                    if (getDistance(circle, circle4) <= (circle.getRadius() + circle4.getRadius())) {
+                        dx = -dx;
+                        dy = -dy;
+                        dx4 = -dx4;
+                        dy4 = -dx4;
+                    }
+                    
+                    if (getDistance(circle2, circle3) <= (circle2.getRadius() + circle3.getRadius())) {
+                        dx2 = -dx2;
+                        dy2 = -dy2;
+                        dx3 = -dx3;
+                        dy3 = -dy3;
+                        
+                    }
+                    
+                    if (getDistance(circle2, circle4) <= (circle2.getRadius() + circle4.getRadius())) {
+                        dx2 = -dx2;
+                        dy2 = -dy2;
+                        dx4 = -dx4;
+                        dy4 = -dy4;
+                    }
+                    
+                    if (getDistance(circle3, circle4) <= (circle3.getRadius() + circle4.getRadius())) {
+                        dx3 = -dx3;
+                        dy3 = -dy3;
+                        dx4 = -dx4;
+                        dy4 = -dy4;
+                    }
+                    
+                }
+                 
+                 function wallCollision(circleA) {
+                    if (circleA.getX() + circleA.getRadius() >= getWidth()) {
+                        flipMovement(circleA, 'horizontal');
+                    }
+                
+                    if (circleA.getX() - circleA.getRadius() <= 0) {
+                        flipMovement(circleA, 'horizontal');
+                    }
+                
+                    if (circleA.getY() + circleA.getRadius() >= getHeight()) {
+                        flipMovement(circleA, 'vertical');
+                    }
+                
+                    if (circleA.getY() - circleA.getRadius() <= 0) {
+                        flipMovement(circleA, 'vertical');
+                    }
+                }
+                
+                
+                
+                function getDistance(circleA, circleB) {
+                    return Math.sqrt(Math.pow(circleB.getX() - circleA.getX(), 2) + Math.pow(circleB.getY() - circleA.getY(), 2)); 
+                }
+                
+                function changeColor() {
+                    circle.setColor(randomizer.nextColor());
+                    circle2.setColor(randomizer.nextColor());
+                    circle3.setColor(randomizer.nextColor());
+                    circle4.setColor(randomizer.nextColor());
+                }
+                
+                function flipMovement(circleA, axis) {
+                    if (axis === 'horizontal') {
+                        if (circleA === circle) {
+                            dx = -dx;
+                        } else if (circleA === circle2) {
+                            dx2 = -dx2;
+                        } else if (circleA === circle3) {
+                            dx3 = -dx3;
+                        } else if (circleA === circle4) {
+                            dx4 = -dx4;
+                        }
+                    } else if (axis === 'vertical') {
+                        if (circleA === circle) {
+                            dy = -dy;
+                        } else if (circleA === circle2) {
+                            dy2 = -dy2;
+                        } else if (circleA === circle3) {
+                            dy3 = -dy3;
+                        } else if (circleA === circle4) {
+                            dy4 = -dy4;
+                        }
+                    }
+                }
+                function fusionGlitch(circleA, circleB) {
+                    var distance = getDistance(circleA, circleB);
+                    var minDistance = circleA.getRadius() + circleB.getRadius();
+                
+                    if (distance < minDistance) {
+                        //console.log("Fusion glitch detected between circles");
+                
+                        // Calculate the overlap distance
+                        var overlap = minDistance - distance;
+                        
+                        // Move the circles apart
+                        circleA.setPosition(circleA.getX() + overlap / 2, circleA.getY());
+                        circleB.setPosition(circleB.getX() - overlap / 2, circleB.getY());
+                    }
+                }
+                
+                function wallGlitch(circleA) {
+                    var radius = circleA.getRadius();
+                
+                    if (circleA.getX() - radius < 0) { // Left boundary
+                        circleA.setPosition(radius, circleA.getY());
+                        //console.log("Wall glitch corrected on left side");
+                    } else if (circleA.getX() + radius > getWidth()) { // Right boundary
+                        circleA.setPosition(getWidth() - radius, circleA.getY());
+                        //console.log("Wall glitch corrected on right side");
+                    }
+                
+                    if (circleA.getY() - radius < 0) { // Top boundary
+                        circleA.setPosition(circleA.getX(), radius);
+                        //console.log("Wall glitch corrected on top side");
+                    } else if (circleA.getY() + radius > getHeight()) { // Bottom boundary
+                        circleA.setPosition(circleA.getX(), getHeight() - radius);
+                        //console.log("Wall glitch corrected on bottom side");
+                    }
+                }
+                
+                function updateRectPosition(circleA, rectA) {
+                    // Adjust these values as needed to position the rectangle relative to the circle
+                    var offsetX = -7.5; // Half the width of the rectangle to center it
+                    var offsetY = -45; // Offset above the circle
+                
+                    rectA.setPosition(circleA.getX() + offsetX, circleA.getY() + offsetY);
+                }
+                
+                function checkMouseCoords(e) {
+                    MOUSE_X = e.getX();
+                    MOUSE_Y = e.getY();
+                }
+                
+                function isBaubleRed() {
+                    if (MOUSE_X <= circle.getX() + circle.getRadius() && MOUSE_X >= circle.getX() - circle.getRadius()){
+                        if (MOUSE_Y <= circle.getY() + circle.getRadius() && MOUSE_Y >= circle.getY() - circle.getRadius()) {
+                            if (circle.getColor() == "red") {
+                                
+                            } else {
+                                TIME-=10;
+                            }
+                        }
+                    }
+                    if (MOUSE_X <= circle2.getX() + circle2.getRadius() && MOUSE_X >= circle2.getX() - circle2.getRadius()) {
+                        if (MOUSE_Y <= circle2.getY() + circle2.getRadius() && MOUSE_Y >= circle2.getY() - circle2.getRadius()) {
+                            if (circle2.getColor() == "red"){
+                                
+                            } else {
+                                TIME-=10;
+                            }
+                        }
+                    }
+                    if (MOUSE_X <= circle3.getX() + circle3.getRadius() && MOUSE_X >= circle3.getX() - circle3.getRadius()) {
+                        if (MOUSE_Y <= circle3.getY() + circle3.getRadius() && MOUSE_Y >= circle3.getY() - circle3.getRadius()) {
+                            if (circle3.getColor() == "red"){
+                            } else {
+                                TIME-=10;
+                            }
+                        }
+                    }
+                    if (MOUSE_X <= circle4.getX() + circle4.getRadius() && MOUSE_X >= circle4.getX() - circle3.getRadius()) {
+                        if (MOUSE_Y <= circle3.getY() + circle3.getRadius() && MOUSE_Y >= circle4.getY() - circle4.getRadius()) {
+                            if (circle4.getColor() == "red") {
+                                
+                            } else {
+                                TIME-=10;   
+                            }
+                        }
+                    }
+                    
+                }
+                
+                function time() {
+                    TIME-=1;
+                    if (TIME <= 0) {
+                        endGame();
+                    }
+                    TIME_TEXT.setText("TIME: " + TIME);
+                    TIME_TEXT.setPosition(getWidth() - TIME_TEXT.getWidth(), 0+TIME_TEXT.getHeight());
+                }
+                
+                function endGame() {
+                    stopTimer(move);
+                    stopTimer(changeColor);
+                    stopTimer(isBaubleRed);
+                    stopTimer(time);
+                    var blankScreen = new Rectangle(getWidth(), getHeight());
+                    blankScreen.setColor(Color.white);
+                    blankScreen.setPosition(0,0);
+                    add(blankScreen);
+                    var gameOver = new Text("GAME OVER");
+                    gameOver.setPosition(CENTER_X - gameOver.getWidth()/2, CENTER_Y - gameOver.getHeight());
+                    add(gameOver);
+                    var hiScore = new Text("High Score: " + SCORE);
+                    hiScore.setPosition(CENTER_X - hiScore.getWidth()/2, CENTER_Y + hiScore.getHeight());
+                    add(hiScore);
+                    var reset = new Text("Press 'r' to reset.");
+                    reset.setPosition(CENTER_X-hiScore.getX()/2, hiScore.getY()+reset.getHeight());
+                    add(reset);
+                    keyDownMethod(reset1);
+                }
+                
+                function reset1(e) {
+                   if (e.keyCode == Keyboard.letter('r')) {
+                        gameStarted = false;
+                        removeAll();
+                        SCORE = 0;
+                        TIME = 30;
+                        clearIntervals();
+                        start();
+                        return;
+                   }
+                }
+                
+                function clearIntervals() {
+                for (var i=0; i<INTERVALS.length; i++) {
+                    var int = INTERVALS.pop();
+                    clearInterval(int);
+                    i--;
+                    //console.log("Clearing: " + INTERVALS);
+                }
+            }
+                
+                function isRed(e) {
+                    if (e.getX() <= circle.getX() + circle.getRadius() && e.getX() >= circle.getX() - circle.getRadius()) {
+                        if (e.getY() <= circle.getY() + circle.getRadius() && e.getY() >= circle.getX() - circle.getRadius()) {
+                            if (circle.getColor() == "red") {
+                                SCORE+=5;
+                                TIME+=7;
+                                SCORE_TEXT.setText("SCORE: " + SCORE);
+                            } else {
+                                TIME-=15;
+                            }
+                        }
+                    }
+                    if (e.getX() <= circle2.getX() + circle2.getRadius() && e.getX() >= circle2.getX() - circle2.getRadius()) {
+                        if (e.getY() <= circle2.getY() + circle2.getRadius() && e.getX() >= circle2.getX() - circle2.getRadius()) {
+                            if (circle2.getColor() == "red") {
+                                SCORE+=5;
+                                TIME+=7;
+                                SCORE_TEXT.setText("SCORE: " + SCORE);
+                            } else {
+                                TIME-=15;   
+                            }
+                        }
+                    }
+                    if (e.getX() <= circle3.getX() + circle3.getRadius() && e.getX() >= circle3.getX() - circle3.getRadius()) {
+                        if (e.getY() <= circle3.getY() + circle3.getRadius() && e.getX() >= circle3.getX() - circle3.getRadius()) {
+                            if (circle3.getColor() == "red") {
+                                SCORE+=5;
+                                TIME+=7;
+                                SCORE_TEXT.setText("SCORE: " + SCORE);
+                            } else {
+                                TIME-=15;   
+                            }
+                        }
+                    }
+                    if (e.getX() <= circle4.getX() + circle4.getRadius() && e.getX() >= circle4.getX() - circle4.getRadius()) {
+                        if (e.getY() <= circle4.getY() + circle4.getRadius() && e.getY() >= circle4.getY() - circle4.getRadius()) {
+                            if (circle4.getColor() == "red") {
+                                SCORE+=5;
+                                TIME+=7;
+                                SCORE_TEXT.setText("SCORE: " + SCORE);
+                            } else {
+                                TIME-=15;   
+                            }
+                        }
+                    }
+                }
+                if (typeof start === 'function') {
+                    start();
+                }
+            };
+        </script>
+        </div>
+    </body>
+</html>

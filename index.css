@@ -1,0 +1,94 @@
+.body {
+    position: relative;
+    margin: auto;
+    height: 900px;
+    width: 1600px;
+    border-style:solid;
+    border-color:#39FF14;
+}
+#border {
+ border-style:solid;
+ border-color:#39FF14;
+}
+
+body {
+  background-color : black;
+  background-image: url('https://codehs.com/uploads/a033f1b9906b7b9a80106fcf73b92211');
+}
+
+h1 {
+  color: white;
+  text-align: center;
+  font-family: "Comic Sans MS";
+  background-image: linear-gradient(to left, violet, indigo, blue, yellow, orange, red);   -webkit-background-clip: text;
+  color: transparent;
+}
+
+p {
+  font-family: "Comic Sans MS";
+  font-size: 20px;
+  position:absolute; left:0px; top:250px;
+  color:#39FF14;
+}
+
+#buttons li {
+  float: left;
+  list-style: none;
+  text-align: center;
+  background-color: black;
+  margin-right: 30px;
+  width: 150px;
+  line-height: 60px;
+  border: 2px solid black;
+  border-color: #39FF14;
+}
+
+#buttons li a {
+  text-decoration: none;
+  color: #FFFFFF;
+  font-size: 15px;
+}
+#buttons li a:hover {
+  text-decoration: none;
+  color: #000000;
+  background-color: #39FF14;
+  
+}
+
+#myImage  { 
+    width: 400px;
+    height: 300px;
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+}
+    
+#myImage2  { 
+    
+    width: 400px;
+    height: 300px;
+    position: absolute;
+    left: 0px;
+    bottom: 0px;
+}
+    
+#myImage3 { 
+    width: 372px;
+    height: 88px;
+    position: absolute;
+    top: 0%;
+    right: 0%;
+}
+    
+#button {
+    background-image: url('animegay.gif');
+    width: 88px;
+    height: 31px;
+    position: absolute;
+    bottom: 0%;
+    left: 50%;
+}
+ 
+  #button:hover {
+      background-image: url('64.gif');
+ }
