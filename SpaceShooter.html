@@ -191,29 +191,22 @@
             }
             
             function gameStart() {
-                if (gameStarted == false) {
-                    remove(TITLE);
-                    remove(PS);
-                    remove(POWER_UP_TEXT);
-                    remove(CONTROLS);
-                    remove(PRESS);
-                    add(PLAYER);
-                    add(HP);
-                    add(SCORE_TXT);
+                if (!gameStarted) {
+                    // Remove initial game elements
+                    [TITLE, PS, POWER_UP_TEXT, CONTROLS, PRESS].forEach(remove);
+                    
+                    // Add game elements
+                    [PLAYER, HP, SCORE_TXT].forEach(add);
+                    
+                    // Update game state
                     gameStarted = true;
+                    
+                    // Set intervals for game events
                     INTERVALS2.push(setInterval(enemyWave, 15000));
-                    INTERVALS2.push(setInterval(powerUp, 15000*SPEED_MULTIPLIER));
-                    //summonStars();
+                    INTERVALS2.push(setInterval(powerUp, 15000 * SPEED_MULTIPLIER));
+                    
+                    // Start the game loop
                     windex = requestAnimationFrame(gameLoop);
-                }
-            }
-            
-            function staryNight() {
-                for (var s=0; s<=100; s++) {
-                   var star = new Oval(4,8);
-                   star.setColor(Color.white);
-                   star.layer=1;
-                   STARS.push(star);
                 }
             }
                 function renderBackground() {
@@ -228,13 +221,6 @@
 
                 // Continue the animation loop.
                 requestAnimationFrame(renderBackground);
-            }
-
-            function summonStars() {
-                for (var i=0; i < STARS.length; i++) {
-                    add(STARS[i]);
-                    INTERVALS2.push(setInterval(speed, 15, i));
-                }
             }
             
             function speed(s) {
