@@ -196,7 +196,8 @@
                     [TITLE, PS, POWER_UP_TEXT, CONTROLS, PRESS].forEach(remove);
                     
                     // Add game elements
-                    [PLAYER, HP, SCORE_TXT].forEach(add);
+                    //[PLAYER, HP, SCORE_TXT].forEach(add);
+                    add(PLAYER, HP, SCORE_TXT);
                     
                     // Update game state
                     gameStarted = true;
