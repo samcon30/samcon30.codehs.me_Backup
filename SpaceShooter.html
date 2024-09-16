@@ -95,7 +95,7 @@
             const totalFrames = 135;  // The total number of frames in your sprite sheet.
             let currentFrame = 0;    // The frame you are currently displaying.
             const backgroundSprite = new Image();
-            backgroundSprite.src = 'https://codehs.com/uploads/20be39efabda84b1aa148d10ce5ead99'; // Link to your animated background sprite sheet.
+            backgroundSprite.src = 'sprite.png'; // Link to your animated background sprite sheet.
             backgroundSprite.onload = function() {
             console.log("Yes");
             // Begin the rendering loop after the image loads.
@@ -152,7 +152,7 @@
                 POWER_UP_TEXT.setColor(Color.white);
                 CONTROLS.setColor(Color.white);
                 PRESS.setColor(Color.white);
-                PLAYER = new WebImage("Ahttps://codehs.com/uploads/6f5738dd183afb96df12af7e00ae575a");
+                PLAYER = new WebImage("https://codehs.com/uploads/6f5738dd183afb96df12af7e00ae575a");
                 HEALTH_POWER_UP = new WebImage("https://codehs.com/uploads/59a4b6bb77f994b664602b250211aa8d");
                 POWER_UP_DOUBLE_SHOT = new WebImage("https://codehs.com/uploads/2798d59328f28cee8bab0d5b29c9baa1");
                 POWER_UP_SHOTGUN = new WebImage("https://codehs.com/uploads/90a542310112ae7122bd68a21ec45eaf");
@@ -196,10 +196,8 @@
                     [TITLE, PS, POWER_UP_TEXT, CONTROLS, PRESS].forEach(remove);
                     
                     // Add game elements
-                    //[PLAYER, HP, SCORE_TXT].forEach(add);
-                    add(PLAYER);
-                    add(HP);
-                    add(SCORE_TXT);
+                    [PLAYER, HP, SCORE_TXT].forEach(add);
+                    
                     // Update game state
                     gameStarted = true;
                     
@@ -209,6 +207,16 @@
                     
                     // Start the game loop
                     windex = requestAnimationFrame(gameLoop);
+            }
+        }
+
+            
+            function staryNight() {
+                for (var s=0; s<=100; s++) {
+                   var star = new Oval(4,8);
+                   star.setColor(Color.white);
+                   star.layer=1;
+                   STARS.push(star);
                 }
             }
                 function renderBackground() {
@@ -223,6 +231,13 @@
 
                 // Continue the animation loop.
                 requestAnimationFrame(renderBackground);
+            }
+
+            function summonStars() {
+                for (var i=0; i < STARS.length; i++) {
+                    add(STARS[i]);
+                    INTERVALS2.push(setInterval(speed, 15, i));
+                }
             }
             
             function speed(s) {
