@@ -6,7 +6,21 @@
         <link href="index.css" type="text/css" rel="stylesheet">
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
         <script type="text/javascript" src="https://static.codehs.com/gulp/80550f5fc4071985bfef352d04f005ca3de931d3/chs-js-lib/chs.js"></script>
-    </head>
+        <style>
+        #myCanvas {
+            position: absolute;
+            top: 50;
+            left: -50;
+            z-index: 1; /* Layer 1 */
+        }
+        #mainCanvas {
+            position: absolute;
+            top: 50;
+            left: -50;
+            z-index: 2; /* Layer 2 */
+        }
+    </style>
+</head>
     <body>
     <div class="body">
     <header>
@@ -22,9 +36,15 @@
         src = "https://images.cooltext.com/5667329.png"
         alt = "Button opening the Youtube Channel Samcon30 in a new tab"     />
     <canvas
+        id="mainCanvas"
         width="400"
         height="480"
         class="codehs-editor-canvas">
+    </canvas>
+    <canvas 
+        id="myCanvas"
+        width="400"
+        height="480">
     </canvas>
     <pre id="console"></pre>
         <!this is the code for my button at the bottom it also adds an id for formating with CSS
@@ -63,11 +83,25 @@
             var NUM_ENEMIES = 100;
             
             //Canvas
+            const canvas = document.getElementById('myCanvas');  // Replace 'myCanvas' with the actual canvas ID
+            const ctx = canvas.getContext('2d');  // This will get the 2D rendering context
             var X = getWidth();
             var Y = getHeight();
             var CENTER_X = X/2;
             var CENTER_Y = Y/2;
             var ONE_FOURTH_Y = Y/4;
+            const frameWidth = 400; // The width of each frame (adjust based on your sprite sheet).
+            const frameHeight = 480; // The height of each frame (adjust based on your sprite sheet).
+            const totalFrames = 135;  // The total number of frames in your sprite sheet.
+            let currentFrame = 0;    // The frame you are currently displaying.
+            const backgroundSprite = new Image();
+            backgroundSprite.src = 'sprite.png'; // Link to your animated background sprite sheet.
+            backgroundSprite.onload = function() {
+            console.log("Yes");
+            // Begin the rendering loop after the image loads.
+            requestAnimationFrame(renderBackground);
+            };
+
             
             //Power-Ups
             var POWER_UP_HEALTH_HP = 5;
@@ -107,7 +141,7 @@
             })();
             
             function start() {
-                BACKGROUND.setColor(Color.black);
+                //BACKGROUND.setColor(Color.black);
                 TITLE.setPosition(CENTER_X-TITLE.getWidth()/2, 0+TITLE.getHeight()+TITLE.getHeight()/4);
                 PS.setPosition(CENTER_X-PS.getWidth()/2, TITLE.getY()+PS.getHeight()*3);
                 POWER_UP_TEXT.setPosition(CENTER_X-POWER_UP_TEXT.getWidth()/2, PS.getY()+POWER_UP_TEXT.getHeight()*3);
@@ -145,14 +179,14 @@
                 HP.layer = 1;
                 SCORE_TXT.layer=1;
                 BOSS_HEALTH.layer = 1;
-                add(BACKGROUND);
+                //add(BACKGROUND);
                 add(TITLE);
                 add(PS);
                 add(POWER_UP_TEXT);
                 add(CONTROLS);
                 add(PRESS);
                 generateEnemies();
-                staryNight();
+                //staryNight();
                 keyDownMethod(gameStart);
             }
             
@@ -169,7 +203,7 @@
                     gameStarted = true;
                     INTERVALS2.push(setInterval(enemyWave, 15000));
                     INTERVALS2.push(setInterval(powerUp, 15000*SPEED_MULTIPLIER));
-                    summonStars();
+                    //summonStars();
                     windex = requestAnimationFrame(gameLoop);
                 }
             }
@@ -182,7 +216,20 @@
                    STARS.push(star);
                 }
             }
-            
+                function renderBackground() {
+                
+                const xSource = (currentFrame % totalFrames) * frameWidth;
+
+                // Clear the canvas and draw the current frame of the background.
+                ctx.drawImage(backgroundSprite, xSource, 0, frameWidth, frameHeight, 0, 0, canvas.width, canvas.height);
+
+                // Increment the frame index for the next draw call.
+                currentFrame = (currentFrame + 1) % totalFrames;
+
+                // Continue the animation loop.
+                requestAnimationFrame(renderBackground);
+            }
+
             function summonStars() {
                 for (var i=0; i < STARS.length; i++) {
                     add(STARS[i]);
